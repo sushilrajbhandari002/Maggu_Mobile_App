@@ -1,45 +1,75 @@
-import { PropsWithChildren, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useRef, useEffect } from "react";
+import { View, Pressable, Animated, StyleSheet } from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+interface CollapsibleProps {
+  children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
 
-export function Collapsible({ children, title }: PropsWithChildren & { title: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const theme = useColorScheme() ?? 'light';
+interface CollapsibleTriggerProps {
+  children: React.ReactNode;
+  onPress?: () => void;
+}
+
+interface CollapsibleContentProps {
+  children: React.ReactNode;
+  style?: object;
+}
+
+export function Collapsible({ children, open = false, onOpenChange }: CollapsibleProps) {
+  const [isOpen, setIsOpen] = useState(open);
+  const animatedHeight = useRef(new Animated.Value(open ? 1 : 0)).current;
+
+  const toggle = () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
+    onOpenChange?.(newState);
+
+    Animated.timing(animatedHeight, {
+      toValue: newState ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
 
   return (
-    <ThemedView>
-      <TouchableOpacity
-        style={styles.heading}
-        onPress={() => setIsOpen((value) => !value)}
-        activeOpacity={0.8}>
-        <IconSymbol
-          name="chevron.right"
-          size={18}
-          weight="medium"
-          color={theme === 'light' ? Colors.light.icon : Colors.dark.icon}
-          style={{ transform: [{ rotate: isOpen ? '90deg' : '0deg' }] }}
-        />
-
-        <ThemedText type="defaultSemiBold">{title}</ThemedText>
-      </TouchableOpacity>
-      {isOpen && <ThemedView style={styles.content}>{children}</ThemedView>}
-    </ThemedView>
+    <View>
+      {React.Children.map(children, (child) => {
+        if (!React.isValidElement(child)) return child;
+        return React.cloneElement(child, { isOpen, toggle, animatedHeight });
+      })}
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  heading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  content: {
-    marginTop: 6,
-    marginLeft: 24,
-  },
-});
+export function CollapsibleTrigger({
+  children,
+  onPress,
+  isOpen,
+  toggle,
+}: CollapsibleTriggerProps & { isOpen?: boolean; toggle?: () => void }) {
+  const handlePress = () => {
+    toggle?.();
+    onPress?.();
+  };
+
+  return <Pressable onPress={handlePress}>{children}</Pressable>;
+}
+
+export function CollapsibleContent({
+  children,
+  style,
+  animatedHeight,
+}: CollapsibleContentProps & { animatedHeight?: Animated.Value }) {
+  const heightInterpolate = animatedHeight?.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1000], // max height, adjust or measure dynamically if needed
+  });
+
+  return (
+    <Animated.View style={[{ overflow: "hidden", height: heightInterpolate }, style]}>
+      {children}
+    </Animated.View>
+  );
+}
