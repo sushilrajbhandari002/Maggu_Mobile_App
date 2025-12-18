@@ -13,7 +13,9 @@ import {
   BookOpen,
   FolderOpen,
   UserCircle,
+  KeyRound,
 } from 'lucide-react-native';
+
 import { User } from '../app/index';
 
 import { StudentOverviewSection } from './student/StudentOverviewSection';
@@ -22,10 +24,13 @@ import { StudentAcademicsSection } from './student/StudentAcademicsSection';
 import { StudentMaterialsSection } from './student/StudentMaterialsSection';
 import { StudentProfileSection } from './student/StudentProfileSection';
 
-
+/* =====================
+   PROPS
+===================== */
 interface StudentDashboardProps {
   user: User;
   onLogout: () => void;
+  onChangePassword: () => void;
 }
 
 type TabType =
@@ -38,6 +43,7 @@ type TabType =
 export default function StudentDashboard({
   user,
   onLogout,
+  onChangePassword,
 }: StudentDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
@@ -66,34 +72,67 @@ export default function StudentDashboard({
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+      {/* =====================
+          HEADER
+      ===================== */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.school}>Sushil School</Text>
+          <Text style={styles.school}>{user.name}</Text>
           <Text style={styles.portal}>Student Portal</Text>
         </View>
-        <TouchableOpacity onPress={onLogout}>
-          <LogOut color="#fff" size={22} />
-        </TouchableOpacity>
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={onChangePassword}
+          >
+            <KeyRound color="#fff" size={20} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={onLogout}
+          >
+            <LogOut color="#fff" size={22} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* WELCOME */}
+      {/* =====================
+          WELCOME
+      ===================== */}
       <View style={styles.welcome}>
         <Text style={styles.welcomeText}>Welcome,</Text>
         <Text style={styles.studentName}>{user.name}</Text>
+
         {user.class && (
           <Text style={styles.classText}>
             {user.class} • Roll No: {user.rollNumber}
           </Text>
         )}
+
+        {/* CHANGE PASSWORD BUTTON */}
+        <TouchableOpacity
+          style={styles.changePasswordBtn}
+          onPress={onChangePassword}
+        >
+          <KeyRound size={16} color="#16a34a" />
+          <Text style={styles.changePasswordText}>
+            Change Password
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* CONTENT */}
+      {/* =====================
+          CONTENT
+      ===================== */}
       <ScrollView style={styles.content}>
         {renderContent()}
       </ScrollView>
 
-      {/* BOTTOM NAV */}
+      {/* =====================
+          BOTTOM NAV
+      ===================== */}
       <View style={styles.bottomNav}>
         {navItems.map(item => {
           const Icon = item.icon;
@@ -125,7 +164,9 @@ export default function StudentDashboard({
   );
 }
 
-/* STYLES */
+/* =====================
+   STYLES
+===================== */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -137,6 +178,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    padding: 6,
   },
   school: {
     color: '#fff',
@@ -164,6 +212,17 @@ const styles = StyleSheet.create({
   classText: {
     color: '#16a34a',
     fontSize: 13,
+    marginBottom: 8,
+  },
+  changePasswordBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  changePasswordText: {
+    color: '#16a34a',
+    fontWeight: '600',
   },
   content: {
     flex: 1,

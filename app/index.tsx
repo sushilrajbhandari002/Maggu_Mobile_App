@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
 import LoginPage from '../components/LoginPage';
 import ChangePasswordPage from '@/components/ChangePasswordPage';
@@ -10,6 +10,7 @@ import TeacherDashboard from '../components/TeacherDashboard';
 export type UserRole = 'teacher' | 'student';
 
 export interface User {
+  assignedClasses: any;
   id: string;
   name: string;
   email: string;
@@ -25,37 +26,80 @@ export interface User {
 
 export default function Index() {
   const [user, setUser] = useState<User | null>(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleLogin = (loggedUser: User) => {
     setUser(loggedUser);
+    setShowChangePassword(false);
   };
 
   const handleLogout = () => {
     setUser(null);
+    setShowChangePassword(false);
   };
 
   const handleUpdateUser = (updatedUser: User) => {
     setUser(updatedUser);
   };
 
+  const handlePasswordChanged = (updatedUser: User) => {
+    // Later → API response will update user
+    setUser(updatedUser);
+    setShowChangePassword(false);
+  };
+
+  /* =====================
+     LOGIN
+  ===================== */
   if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
+    return (
+      <View style={styles.container}>
+        <LoginPage onLogin={handleLogin} />
+      </View>
+    );
   }
 
-  if (user.role === 'student') {
+  /* =====================
+     CHANGE PASSWORD
+  ===================== */
+  if (showChangePassword) {
     return (
-      <StudentDashboard
+      <ChangePasswordPage
         user={user}
+        onPasswordChanged={handlePasswordChanged}
         onLogout={handleLogout}
       />
     );
   }
 
+  /* =====================
+     STUDENT DASHBOARD
+  ===================== */
+  if (user.role === 'student') {
+    return (
+      <StudentDashboard
+        user={user}
+        onLogout={handleLogout}
+        onChangePassword={() => setShowChangePassword(true)}
+      />
+    );
+  }
+
+  /* =====================
+     TEACHER DASHBOARD
+  ===================== */
   return (
     <TeacherDashboard
       user={user}
       onLogout={handleLogout}
       onUpdateUser={handleUpdateUser}
+      onChangePassword={() => setShowChangePassword(true)}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
